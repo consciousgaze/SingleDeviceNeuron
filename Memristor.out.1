@@ -1,0 +1,87 @@
+
+**** 08/05/13 17:24:09 ***** PSpice 16.6.0 (October 2012) ***** ID# 0 ********
+
+ firing
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+.SUBCKT memristor Pos Neg
+* Parameters:
+.PARAM n=4 a1=9 a2=0.01 b1=2 b2=4 l=10N
+.PARAM wmin=0.05 wmax=0.95 p0=1.2 fon=40E-3 foff=40E-3
+* Shape factor, sf, can be a function of tunneling barrier width (normalized state variable)
+.PARAM sfo=4  sfm=20  p=5 
+*** sf(w)=sfo+sfm(1-(2w-1)**2p)
+*State variable:
+Gvon 0 w value = {signm(wmax-V(w))*signm(V(Pos,Neg))*gon(V(Pos,Neg),sf(V(w)),p0)}
+Gvoff 0 w value = {signm(V(w)-wmin)*signm(V(Neg,Pos))*goff(V(Pos,Neg),sf(V(w)),p0)}
+* Initiai (internal) state:
+.IC V(w) = 0.05
+*Integration:
+Cw w 0 8e-5
+Rw w 0 0.01T
+*Current equation:
+Gmem Pos Neg value = {l*((V(w)**n)*a1*sinh(b1*V(Pos,Neg))+a2*(exp(b2*V(Pos,Neg))-1))}
+* Series resistor, Rs, can be implemented here, between two Neg1 and Neg2 nodes.
+* Functjons:
+.func signm(v) = {(sgn(v)+1)/2}
+.func gon(v1,v2,v3) = {fon*((1-v1/(2*v3))*exp(v2*v3*(1-sqrt((1-v1/(2*v3))))))}
+.func goff(v1,v2,v3) = {foff*(-((1+v1/(2*v3))*exp(v2*v3*(1-sqrt((1+v1/(2*v3)))))))}
+.func sf(v1) = {sfo+sfm*(1-(2*(v1)-1)**2p)}
+.ENDS
+
+.model Dfire D (IS=0.1PA RS=16 CJO=2pF TT=12N BV=30 IBV=0.1PA)
+.model Dblock D (IS=0.1PA RS=16 CJO=2pF TT=12N BV=15 IBV=0.1PA)
+.model Dshut D (IS=0.1PA RS=16 CJO=2pF TT=12N BV=100 IBV=0)
+vdd 1 0 dc 32
+d1 6 1 Dfire
+x1  5 4 memristor
+vm 3 5 dc 0
+*d3 6 4 Dshut
+vm2 6 4 dc 0
+vin 2 0 pwl(0 5 1.99u 5 2.05u 6 3u 6 3.1u 5)
+r1 2 4 1000meg
+r2 3 0 1000k
+r3 4 0 1000meg
+*rd 2 3 200k
+d2 3 2 Dblock
+.tran 0.0001us 10us
+*.PRINT tran I(vin) I(r1) I(r2) I(r3) I(d2)
+.PRINT tran vin I(vm) I(vdd) v(4, 1) v(5, 4)
+----------------$
+ERROR(ORPSIM-16295): Invalid Expression: Specify either current(I) or voltage(V) or digital(D).
+.END
+
+**** 08/05/13 17:24:10 ***** PSpice 16.6.0 (October 2012) ***** ID# 0 ********
+
+  
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
